@@ -10,6 +10,9 @@ function App() {
       <nav>
 
       </nav>
+      <p className="description">
+        This is an implementation of the <a href="http://www.gwylab.com/download/ORB_2012.pdf">ORB feature detection algorithm</a> in WebAssembly running in the browser.
+      </p>
       <div>
         <PhotoUploader />
       </div>

@@ -17,7 +17,7 @@ function PhotoUploader(){
 
     return (
         <section>
-            <form>
+            <form className="form">
                 <label>Select image:</label>
                 <input type="file" id="img" name="img" accept="image/*" onChange={handleImageChange}></input>
             </form>
