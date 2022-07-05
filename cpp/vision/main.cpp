@@ -1,4 +1,3 @@
-#include <opencv2/imgproc.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -6,46 +5,55 @@
 #include <opencv2/features2d.hpp>
 #include <iostream>
 #include <chrono>
+#include <SDL.h>
 
-#include <emscripten.h>
+//#include <emscripten.h>
+#include "slam.h"
 
-struct Frame {
-    //std::vector<Point> pts;
-    std::vector<cv::KeyPoint> keypoints;
 
-};
 
-class WebSlam {
+SDL_Window* window;
+SDL_Renderer* renderer;
+SDL_Surface* surface;
 
-public:
-    int processFrame(cv::Mat& img, Frame& frame) {
+void drawRandomPixels() {
+    if (SDL_MUSTLOCK(surface)) SDL_LockSurface(surface);
 
-        // Extract Features and Descriptors
-        auto orb = cv::ORB::create();
-        cv::Mat desc;
-        //orb->detectAndCompute(img, cv::Mat(), frame.keypoints, desc);
+    Uint8* pixels = (Uint8*)surface->pixels;
 
-        // TODO: extract multi level features (image pyramid)
-        std::vector<cv::Point> corners(500);
-        cv::goodFeaturesToTrack(img, corners, 500, 0.01, 7);
-
-        for (int i = 0; i < corners.size(); i++) {
-            frame.keypoints.push_back(
-                cv::KeyPoint(corners[i], 20)
-            );
-        }
-
-        orb->compute(img, frame.keypoints, desc);
-
-        return 0;
+    for (int i = 0; i < 1048576; i++) {
+        char randomByte = rand() % 255;
+        pixels[i] = randomByte;
     }
-};
 
+    if (SDL_MUSTLOCK(surface)) SDL_UnlockSurface(surface);
 
+    SDL_Texture* screenTexture = SDL_CreateTextureFromSurface(renderer, surface);
 
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, screenTexture, NULL, NULL);
+    SDL_RenderPresent(renderer);
+
+    SDL_DestroyTexture(screenTexture);
+}
 
 int main(int argc, char **argv){
-    
+    SDL_Init(SDL_INIT_VIDEO);
+
+    SDL_CreateWindowAndRenderer(512, 512, 0, &window, &renderer);
+    surface = SDL_CreateRGBSurface(0, 512, 512, 32, 0, 0, 0, 0);
+
+#ifdef __EMSCRIPTEN__
+    emscripten_set_main_loop(drawRandomPixels, 0, 1);
+#else
+    while (1) {
+        drawRandomPixels();
+        SDL_Delay(16);
+    }
+#endif 
+
+    return 0;
+
     cv::VideoCapture cap;
     cap.open("C:/Users/janis/Desktop/net-slam/net-slam/core/vision/test.mp4");
 
