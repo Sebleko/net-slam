@@ -1,0 +1,4 @@
+interface WebSlam {
+    void WebSlam();
+    long processFrameAndDrawFeatures(DOMString image, long w, long h, long c);
+};

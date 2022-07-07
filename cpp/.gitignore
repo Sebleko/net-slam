@@ -1,7 +1,5 @@
-/vision/test.mp4
 
-.vscode
-build
+test.mp4
 
 # Config file
 .emscripten
