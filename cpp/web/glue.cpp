@@ -31,6 +31,10 @@ int EMSCRIPTEN_KEEPALIVE emscripten_bind_WebSlam_processFrameAndDrawFeatures_4(W
   return self->processFrameAndDrawFeatures(image, w, h, c);
 }
 
+int EMSCRIPTEN_KEEPALIVE emscripten_bind_WebSlam_square_number_test_1(WebSlam* self, int num) {
+  return self->square_number_test(num);
+}
+
 void EMSCRIPTEN_KEEPALIVE emscripten_bind_WebSlam___destroy___0(WebSlam* self) {
   delete self;
 }

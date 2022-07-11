@@ -1,4 +1,8 @@
 interface WebSlam {
     void WebSlam();
+    
     long processFrameAndDrawFeatures(DOMString image, long w, long h, long c);
+    long square_number_test(long num);
 };
+
+

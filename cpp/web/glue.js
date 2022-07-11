@@ -219,6 +219,12 @@ WebSlam.prototype['processFrameAndDrawFeatures'] = WebSlam.prototype.processFram
   return _emscripten_bind_WebSlam_processFrameAndDrawFeatures_4(self, image, w, h, c);
 };;
 
+WebSlam.prototype['square_number_test'] = WebSlam.prototype.square_number_test = /** @suppress {undefinedVars, duplicate} @this{Object} */function(num) {
+  var self = this.ptr;
+  if (num && typeof num === 'object') num = num.ptr;
+  return _emscripten_bind_WebSlam_square_number_test_1(self, num);
+};;
+
   WebSlam.prototype['__destroy__'] = WebSlam.prototype.__destroy__ = /** @suppress {undefinedVars, duplicate} @this{Object} */function() {
   var self = this.ptr;
   _emscripten_bind_WebSlam___destroy___0(self);
