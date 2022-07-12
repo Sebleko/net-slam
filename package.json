@@ -4,6 +4,6 @@
     },
     "scripts": {
         "start": "node ./backend/build/index.js",
-        "build": "(cd ./frontend && npm i && npm run build) && npm i typescript && (cd ./backend  && npm i && npm i npm run build) && npm rm typescript"
+        "build": "(cd ./frontend && npm i && npm run build) && npm i typescript && (cd ./backend && npm i && npm run build) && npm rm typescript"
     }
 }
