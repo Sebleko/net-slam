@@ -42,3 +42,9 @@
   max-width: 30rem;
   text-align: left;
 }
+
+#canvas{
+  border: 1px solid black;
+  height: 800px;
+  width: 500px;
+}

@@ -3,7 +3,7 @@
 This project is for learning about WebAssembly and the feasibility of running more demanding computer vision and slam algorithms in the browser.
 
 TODO:
-- [ ] Implement the orb extractor.
+- [x] Implement the orb extractor.
 - [ ] Enable use of the webcam.
 - [ ] Implement orb feature tracking.
 - [ ] Improve UI.
