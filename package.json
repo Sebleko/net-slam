@@ -1,9 +1,9 @@
 {
     "engines": {
-        "node" : ">=16.0.0"
+        "node": ">=16.0.0"
     },
     "scripts": {
         "start": "node ./backend/build/index.js",
-        "build": "(cd ./frontend && npm i && npm run build) && (cd ./backend  && npm i && npm run build)"
-      }
+        "build": "(cd ./frontend && npm i && npm run build) && npm i typescript && (cd ./backend  && npm i && npm i npm run build) && npm rm typescript"
+    }
 }
