@@ -1,4 +1,5 @@
 #include "slam.h"
+#include <iostream>
 
 int WebSlam::processFrameAndDrawFeatures(char *data, int w, int h, int c){
     cv::Mat image;
@@ -11,14 +12,13 @@ int WebSlam::processFrameAndDrawFeatures(char *data, int w, int h, int c){
     } else { // Simmply assume that c == 1;
         image = cv::Mat(h, w, CV_8UC1, data);
         gray = image;
-
         assert(image.data == gray.data);
     }
     
     processFrame(gray);
     cv::drawKeypoints(image, _last_frame->keypoints, image);
 
-    return 0;
+    return (int)(_last_frame->keypoints.size());
 }
 
 int WebSlam::processFrame(char *data, int w, int h){
