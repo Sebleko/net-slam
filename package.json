@@ -1,0 +1,6 @@
+{
+    "scripts": {
+        "start": "node ./backend/build/index.js",
+        "build": "(cd ./frontend && npm run build) && (cd ./backend  && npx tsc)"
+      }
+}
