@@ -1,6 +1,6 @@
 
 test.mp4
-
+wasm-build
 # Config file
 .emscripten
 .emscripten_backup
