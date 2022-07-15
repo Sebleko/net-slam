@@ -1,10 +1,11 @@
-import { useRef } from 'react'
+import { useRef, Dispatch } from 'react'
 import useOrbFeatures from '../hooks/useOrbFeatures';
 import ScannerView from '../components/ScannerView';
 
 import SettingsIcon from '@mui/icons-material/Settings';
 import StopIcon from '@mui/icons-material/Stop';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 
 import DashboardPanel from '../components/DashboardPanel';
 import useMediaQuery from '../hooks/useMediaQuery';
@@ -13,12 +14,15 @@ import SlamMetricsProvider from '../hooks/useSlamMetrics';
 
 const captureSettings = { 'video': true, 'audio': false };
 
-
-export default function ScanningPage() {
+interface ScanningPageProps {
+    setShowInfo: Dispatch<React.SetStateAction<boolean>>
+}
+export default function ScanningPage({ setShowInfo }: ScanningPageProps) {
     const matches = useMediaQuery('(max-width: 600px)');
     const { setStream, setImageConstraints, getFrame, isReady } = useOrbFeatures(10000000);
     const streamRef = useRef<MediaStream>();
     const [openErrorPopup, ,] = useErrorPopup();
+
 
     async function setupStream(){
         if (!streamRef.current){
@@ -50,9 +54,14 @@ export default function ScanningPage() {
     return (
         <SlamMetricsProvider>
             <section style={{height: '100vh', position: 'relative'}}>
-                <button style={{position: "absolute",right: "0",top: "0", margin: "1.5rem", zIndex:100}} onClick={e => { console.log("pressed"); openErrorPopup("This Feature is not yet implemented.", ErrorPopupType.Warning); }}>
-                    <SettingsIcon  />
-                </button>
+                <div style={{position: "absolute",right: "0",top: "0", margin: "1.5rem", zIndex:100}}>
+                    <button onClick={e => setShowInfo(prev => !prev)}>
+                        <QuestionMarkIcon />
+                    </button>
+                    <button  onClick={e => { openErrorPopup("This Feature is not yet implemented.", ErrorPopupType.Warning); }}>
+                        <SettingsIcon  />
+                    </button>
+                </div>
 
                 <div className="shell" style={{position:"relative", display: matches ? "box" : "flex", width: '100%', height: '100%', paddingTop: "5rem"}} >
                     <div className='view_wrapper' style={{position: matches ? "absolute" : "relative", right: 0, bottom: 0, left: 0, top: 0, flexGrow: 3}}>

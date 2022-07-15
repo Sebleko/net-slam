@@ -1,0 +1,32 @@
+.popup_wrapper {
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 101;
+    background-color: rgba(0, 0, 0, 0.429);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.info_popup {
+    display: flex;
+    flex-direction: column;
+    width: 60vw;
+    height: 80vh;
+    background-color: gainsboro;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.2), 0 6px 10px 0 rgba(0, 0, 0, 0.14),
+    0 1px 18px 0 rgba(0, 0, 0, 0.12);
+}
+
+.middle {
+    margin: auto;
+}
+
+hr {
+    color: rgb(0, 0, 93);
+}
