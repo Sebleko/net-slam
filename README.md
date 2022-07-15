@@ -4,8 +4,8 @@ This project is for learning about WebAssembly and the feasibility of running mo
 
 TODO:
 - [x] Implement the orb extractor.
-- [ ] Enable use of the webcam.
+- [x] Enable use of the webcam.
 - [ ] Implement orb feature tracking.
-- [ ] Improve UI.
+- [x] Improve UI.
 - [ ] Enable establishing p2p connection between pc and smarphone, so that the smarphone can be used as a webcam and the pc can be used for computing.
 - [ ] Implement simple visual odometry.

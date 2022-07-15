@@ -1,0 +1,66 @@
+.error_popup {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    border-radius: 4px;
+    max-width: 90vw;
+    background-color: #333;
+    box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.2), 0 6px 10px 0 rgba(0, 0, 0, 0.14),
+        0 1px 18px 0 rgba(0, 0, 0, 0.12);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.87);
+    letter-spacing: 0.25px;
+    line-height: 20px;
+    text-align: left;
+
+    padding: 0 15px;
+}
+
+.error_popup__message {
+    flex-grow: 1;
+    padding: 14px 16px;
+    margin-left: 6px;
+    pointer-events: auto;
+}
+
+.error_popup_type__error {
+    background-color: #e30425;
+}
+
+.error_popup_type__warning {
+    background-color: #fd9726;
+}
+
+.error_popup_wrapper_general {
+    display: flex;
+    align-items: center;
+    margin: 8px;
+    position: fixed;
+    right: 0;
+    left: 0;
+    z-index: 100;
+    transition: opacity 150ms, transform 150ms;
+    pointer-events: none;
+
+    justify-content: center;
+    top: 8px;
+}
+
+.error_popup_wrapper-enter {
+    transform: translateY(-32px);
+}
+.error_popup_wrapper-enter-active {
+    transform: translateY(0);
+    transition: transform 300ms;
+}
+.error_popup_wrapper-exit {
+    transform: translateY(0);
+}
+.error_popup_wrapper-exit-active {
+    transform: translateY(-32px);
+    transition: transform 150ms;
+}
