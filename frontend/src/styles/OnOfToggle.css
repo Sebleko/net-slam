@@ -1,0 +1,31 @@
+.background {
+    width: 3rem;
+    height: 1rem;
+
+    border-radius: 0.5rem;
+    transition: background-color 150ms;
+}
+.background__on {
+    background-color: green;
+
+}
+.background__off {
+    background-color: #e30425;
+
+}
+.nob {
+    width: 1rem;
+    height: 1rem;
+
+    border-radius: 0.5rem;
+
+    background-color: rgb(183, 183, 183);
+    transition: transform 150ms;
+}   
+.nob__on {
+    transform: translateX(2rem);
+}
+.nob__off {
+    transform: translateX(0rem);
+}
+

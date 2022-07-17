@@ -1,29 +1,27 @@
-import { useRef, useEffect, useCallback } from 'react'
-import { ImageConstraints, OrbFrame } from '../hooks/useOrbFeatures';
-import useResizeObserver from '@react-hook/resize-observer'
-import { useErrorPopup, ErrorPopupType } from './ErrorPopup'
-import { useSlamMetrics } from "../hooks/useSlamMetrics"
+import { useRef, useEffect } from 'react'
+/* import { useErrorPopup } from './ErrorPopup'
+import { useSlamMetrics } from "../hooks/useSlamMetrics" */
 
 interface ScannerDisplayProps {
     //renderer: CustomRenderer
-    rendererIsReady: boolean;
-    computeFrame: () => OrbFrame | null;
-    setImageConstraints: React.Dispatch<React.SetStateAction<ImageConstraints>>;
+    stream: MediaStream | null;
 }
 
 
 
-export default function ScannerDisplay({rendererIsReady, computeFrame, setImageConstraints}: ScannerDisplayProps){
-    const loopFlag = useRef(false);
+export default function ScannerDisplay({stream}: ScannerDisplayProps){
+/*     const loopFlag = useRef(false); */
     const wrapperRef = useRef<HTMLDivElement>(null);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
+
+/*     const canvasRef = useRef<HTMLCanvasElement>(null);
     const contextRef = useRef<CanvasRenderingContext2D>();
     const lastDrawTimeRef = useRef<number>(0);
     const [openErrorPopup, ,] = useErrorPopup();
 
-    const { updateMetrics } = useSlamMetrics();
+    const { updateMetrics } = useSlamMetrics(); */
 
-    const renderLoop = useCallback(() => {
+    /* const renderLoop = useCallback(() => {
         if (loopFlag.current && contextRef.current && canvasRef.current){
             
             const orb_frame = computeFrame()
@@ -48,51 +46,20 @@ export default function ScannerDisplay({rendererIsReady, computeFrame, setImageC
                 window.requestAnimationFrame(renderLoop);
             }
         }
-    }, [computeFrame, updateMetrics])
+    }, [computeFrame, updateMetrics]) */
 
-    
     useEffect(() => {
-        if (canvasRef.current) {
-            const ctx = canvasRef.current.getContext("2d");
-            if (ctx){
-                contextRef.current = ctx
-            } else {
-                console.error("Could not get canvas 2d context");
-            }
-            
+        if (videoRef.current){
+            videoRef.current.srcObject = stream; 
         }
-    }, [canvasRef])
-
-    // Gateway into render loop.
-    useEffect(() => {
-        loopFlag.current = rendererIsReady;
-        if (rendererIsReady){
-            const ctx = canvasRef.current?.getContext("2d")
-            if (ctx){
-                contextRef.current = ctx;
-
-                lastDrawTimeRef.current = performance.now();
-                renderLoop();
-            } else {
-                openErrorPopup("Could not get canvas context.", ErrorPopupType.Error);
-            }
-        } else {
-            canvasRef.current?.getContext("2d")?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-        }
-    }, [rendererIsReady, renderLoop, openErrorPopup])
-
-    // Update image constraints whenever the canvas wrapper resizes.
-    useResizeObserver(wrapperRef, entry => {
-        const w = entry.contentRect.width;
-        const h = entry.contentRect.height;
-        setImageConstraints({width: w, height: h, preserveRatio: true});
-    });
+    }, [stream])
 
     return(
         <div style={{width: "100%", height: "100%", /* borderStyle: "solid", */ display:"flex", justifyContent:"center", alignItems:"center"}} id="scanner_display" ref={wrapperRef}>
-            <canvas style={{maxWidth: "100%", maxHeight: "100%" }} id="canvas" ref={canvasRef}>
+            {/* <canvas style={{maxWidth: "100%", maxHeight: "100%" }} id="canvas" ref={canvasRef}>
                 Sorry, your browser does not support this feature (HTML5 canvas)
-            </canvas>
+            </canvas> */}
+            <video ref={videoRef} style={{maxWidth: "100%", maxHeight: "100%", minWidth: "100%", minHeight: "100%"}}autoPlay></video>
         </div>
     )
 }

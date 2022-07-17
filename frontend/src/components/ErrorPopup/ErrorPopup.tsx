@@ -1,4 +1,4 @@
-import {createContext, useState, useContext, ReactNode } from 'react';
+import {createContext, useState, useContext, ReactNode, useCallback } from 'react';
 import { CSSTransition } from 'react-transition-group'
 import './ErrorPopup.css';
 
@@ -8,7 +8,7 @@ interface ErrorContextValues {
     closeErrorPopup: () => void,
     openErrorPopup: (msg: string, dur: number, type: ErrorPopupType) => void,
 }
-export const ErrorContext = createContext<ErrorContextValues>({closeErrorPopup: () => {console.error("CloseErrorPopupCalled but context was uninitialized.")}, openErrorPopup: (msg, dur) => {console.error("OpenErrorPopupCalled but context was uninitialized.")}});
+export const ErrorContext = createContext<ErrorContextValues>({closeErrorPopup: () => {console.error("CloseErrorPopup called but context was uninitialized.")}, openErrorPopup: (msg, dur) => {console.error("OpenErrorPopup called but context was uninitialized.")}});
 
 type ErrorPopupProps = {
     children?: ReactNode,
@@ -80,11 +80,11 @@ export default function ErrorPopupProvider(props: ErrorPopupProps) {
 export function useErrorPopup() {
     const context = useContext(ErrorContext);
 
-    function open(text="", type=ErrorPopupType.Error, duration=5000){
+    const open = useCallback((text="", type=ErrorPopupType.Error, duration=5000) => {
         if (context) {
             context.openErrorPopup(text, duration, type);
         } else throw new Error("useErrorPopup tried to access uninitialized Context.");
-    }
+    }, [context])
 
     return [open, context?.closeErrorPopup];
 }
