@@ -6,23 +6,25 @@ int WebSlam::processFrameAndDrawFeatures(char *data, int w, int h, int c){
     
     cv::Mat gray;
 
-    if (c == 3){
+    if (c == 4){
+        image = cv::Mat(h, w, CV_8UC4, data);
+        cv::cvtColor(image, gray, cv::COLOR_RGBA2GRAY);
+    }
+    else if (c == 3){
         image = cv::Mat(h, w, CV_8UC3, data);
         cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
     } else { // Simmply assume that c == 1;
         image = cv::Mat(h, w, CV_8UC1, data);
         gray = image;
-        assert(image.data == gray.data);
     }
     
     processFrame(gray);
-    cv::drawKeypoints(image, _last_frame->keypoints, image);
+    cv::drawKeypoints(image, _last_frame->keypoints, image, cv::Scalar::all(255));
 
     return (int)(_last_frame->keypoints.size());
 }
 
 int WebSlam::processFrame(char *data, int w, int h){
-    
     cv::Mat mat(w, h, CV_8UC1, data);
     return processFrame(mat);
 }

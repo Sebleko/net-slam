@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback, MutableRefObject } from "react";
 import { WebSlam } from "../wasm/slam";
 import slamPromise from '../wasm'
-import { addAlphaChannelToRGB } from '../util/image_ops';
 import { ConstrainedPixelResolution } from "../core/SlamInterfaces";
 
 
@@ -55,18 +54,13 @@ export default function useOrbFeatureStream(inputStream: MediaStream | null, set
             const w = outputDimsRef.current.width;
             const h = outputDimsRef.current.height
             ctx.drawImage(video, 0, 0, w, h);
-
             const pixels = ctx.getImageData(0, 0, w, h);
-            const without_alpha = pixels.data.filter((value, index) => {return (((index+1) % 4) !== 0)});
 
             const wasm_start = performance.now();
-            const res = slam.processFrameAndDrawFeatures(without_alpha, pixels.width, pixels.height, 3);
+            const res = slam.processFrameAndDrawFeatures(pixels.data, pixels.width, pixels.height, 4);
             const wasm_end = performance.now();
-
-            const data = addAlphaChannelToRGB(res.data, 255);
-
-            octx?.clearRect(0, 0, w, h);
-            octx?.putImageData(new ImageData(data, w, h), 0, 0);
+            
+            octx?.putImageData(new ImageData(new Uint8ClampedArray(res.data), w, h), 0, 0);
 
             callbackIdRef.current = requestAnimationOrVideoFrame(handleFrameLoop, video);
 
