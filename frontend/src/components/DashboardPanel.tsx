@@ -1,24 +1,23 @@
-import { useEffect, useCallback, useRef } from 'react';
-import { useSlamMetrics } from "../hooks/useSlamMetrics";
+import { useEffect, useRef, MutableRefObject } from 'react';
+import { OrbStats } from "../hooks/useOrbFeatures"
 
-
-export default function DashboardPanel(){
+export default function DashboardPanel({orbStatsRef}: {orbStatsRef: MutableRefObject<OrbStats>}){
     const fpsRef = useRef<HTMLHeadingElement>(null);
     const wasmFractionRef = useRef<HTMLHeadingElement>(null);
     const featuresRef = useRef<HTMLHeadingElement>(null);
     const rafIdRef = useRef<number>(0);
-
-    const { getSnapshot } = useSlamMetrics();
-
+ 
 
 
-    const updateStats = useCallback(() => {
-        const snpst = getSnapshot();
+    function updateStats() {
         if (fpsRef.current && wasmFractionRef.current && featuresRef.current) {
-            if (snpst){
-                fpsRef.current.innerText = `FPS: ${snpst.fps.toString()}`;
-                wasmFractionRef.current.innerText = `WASM/JS: ${Math.round(snpst.wasm_proc_time/snpst.total_proc_time*100)}%`
-                featuresRef.current.innerText = `Features: ${snpst.features_found}`;
+            const stats = orbStatsRef.current;
+            
+            if (stats.frame_interval !== Infinity){
+                const fps = Math.round(1000/stats.frame_interval);
+                fpsRef.current.innerText = `FPS: ${fps.toString()}`;
+                wasmFractionRef.current.innerText = `WASM/JS: ${Math.round(stats.wasm_time_ms/stats.total_time_ms*100)}%`
+                featuresRef.current.innerText = `Features: ${stats.features}`;
             } else {
                 fpsRef.current.innerText = "FPS: N/A";
                 wasmFractionRef.current.innerText = "WASM/JS: N/A";
@@ -27,14 +26,16 @@ export default function DashboardPanel(){
             
         } 
         rafIdRef.current = window.setTimeout(updateStats, 300);
-    }, [getSnapshot])
+    }
 
     useEffect(() => {
         updateStats();
         return () => {
             window.clearTimeout(rafIdRef.current);
         }
-    }, [updateStats])
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     return (
         <div>

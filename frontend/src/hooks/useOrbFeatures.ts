@@ -1,112 +1,171 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, MutableRefObject } from "react";
 import { WebSlam } from "../wasm/slam";
 import slamPromise from '../wasm'
 import { addAlphaChannelToRGB } from '../util/image_ops';
+import { ConstrainedPixelResolution } from "../core/SlamInterfaces";
 
 
-export interface ImageConstraints {
-    width: number,
-    height: number,
-    preserveRatio: boolean,
+
+export interface OrbSettings {
+    output_width?: number;
+    output_height?: number;
 }
-
-export interface PerformanceMetric {
-    features_extracted: number,
-    rolling_fps: number,
+export interface OrbStats {
+    frame_interval: number;
+    features: number;
+    wasm_time_ms: number;
+    total_time_ms: number;
 }
-
-export interface OrbFrame {
-    img_data: ImageData,
-    wasm_time_ms: number,
-    total_time_ms: number,
-    features: number,
-}
-
 interface useOrbFeaturesReturnInterface {
-    setStream: React.Dispatch<React.SetStateAction<MediaStream | undefined>>;
-    setImageConstraints: React.Dispatch<React.SetStateAction<ImageConstraints>>;
-    getFrame: () => (OrbFrame | null);
-    isReady: boolean;
+    orbStream: MediaStream | null;
+    orbStatsRef: MutableRefObject<OrbStats>;
 }
 
-export default function useOrbFeatures(metricUpdateInterval: number): useOrbFeaturesReturnInterface {
-    const [stream, setStream] = useState<MediaStream>();
-    const [imageConstraints, setImageConstraints] = useState<ImageConstraints>({width: 300, height: 300, preserveRatio: true});
-    const [isReady, setIsReady] = useState<boolean>(false);    
 
-    const slamRef = useRef<WebSlam>();
-    const videoRef = useRef<HTMLVideoElement>(document.createElement("video"));
+export default function useOrbFeatureStream(inputStream: MediaStream | null, settings: OrbSettings): useOrbFeaturesReturnInterface {
+    const outputDimsRef = useRef<ConstrainedPixelResolution>({width: 500, height: 500});
+    const [outputStream, setOutputStream] = useState<MediaStream | null>(null);
+    const [slam, setSlam] = useState<WebSlam>();
+
+    //const videoRef = useRef<HTMLVideoElement>(document.createElement("video"));
+    const [video, setVideo] = useState<HTMLVideoElement|null>(null);
     const canvasRef = useRef<HTMLCanvasElement>(document.createElement("canvas"));
     const contextRef = useRef<CanvasRenderingContext2D>(canvasRef.current.getContext("2d"));
+    const callbackIdRef = useRef<number>(-1);
 
-    const requestReady = useCallback(() => {
-        if (stream && slamRef.current && videoRef.current.readyState >= 2) setIsReady(true);
-    }, [setIsReady, stream])
+    const outputCanvasRef = useRef<HTMLCanvasElement>(document.createElement("canvas"));
+    const outputContextRef = useRef<CanvasRenderingContext2D>(outputCanvasRef.current.getContext("2d"));
 
+    const lastFrameTimeRef = useRef<number>(-1);
+    const orbStatsRef = useRef<OrbStats>({frame_interval: Infinity, features: 0, wasm_time_ms: 0, total_time_ms: 0});
+
+    const handleFrameLoop = useCallback(() => {
+        if (
+            video &&
+            video.readyState >= 2 && 
+            slam  && 
+            contextRef.current
+            )
+        {
+            const handle_start = performance.now();
+
+            const ctx = contextRef.current;
+            const octx = outputContextRef.current;
+
+            const w = outputDimsRef.current.width;
+            const h = outputDimsRef.current.height
+            ctx.drawImage(video, 0, 0, w, h);
+
+            const pixels = ctx.getImageData(0, 0, w, h);
+            const without_alpha = pixels.data.filter((value, index) => {return (((index+1) % 4) !== 0)});
+
+            const wasm_start = performance.now();
+            const res = slam.processFrameAndDrawFeatures(without_alpha, pixels.width, pixels.height, 3);
+            const wasm_end = performance.now();
+
+            const data = addAlphaChannelToRGB(res.data, 255);
+
+            octx?.clearRect(0, 0, w, h);
+            octx?.putImageData(new ImageData(data, w, h), 0, 0);
+
+            callbackIdRef.current = requestAnimationOrVideoFrame(handleFrameLoop, video);
+
+            const handle_end = performance.now();
+
+            const total_time_ms = handle_end-handle_start;
+            const wasm_time_ms = wasm_end-wasm_start;
+            
+            let frame_interval = 0;
+            if (lastFrameTimeRef.current !== -1){
+                frame_interval = handle_end- lastFrameTimeRef.current
+            }
+            lastFrameTimeRef.current = handle_end;
+
+            orbStatsRef.current = {frame_interval, total_time_ms, wasm_time_ms, features: res.numFeaturesFound};
+        }
+    }, [slam, video])    
+
+    // Load Wasm
     useEffect(() => {
         slamPromise
-        .then(slam => { slamRef.current = slam; requestReady(); })
+        .then(slam => { setSlam(slam); console.log("WASM was loaded") })
         .catch(error => console.error(error) )
-    }, [requestReady])
+        
+    }, [])
+
+
+    // Handle Input Change
+    useEffect(() => {
+        if (inputStream && settings) {
+            const vid = document.createElement("video");
+            vid.srcObject = inputStream;
+          
+            vid.oncanplay = () => {
+                setVideo(vid);
+            }
+            vid.play();
+
+            return () => {
+                setVideo(null)
+            }
+        }
+        
+    }, [inputStream, settings, setVideo])
 
     useEffect(() => {
-        if (stream) {
-            videoRef.current.srcObject = stream;
-            videoRef.current.oncanplay = () => requestReady();
-            videoRef.current.play();
-        } else {
-            setIsReady(false);
+        if (video){
+            const frameSize = determineFrameSize(video.videoWidth, video.videoHeight, settings.output_width, settings.output_height);
+            outputDimsRef.current = frameSize;
+            canvasRef.current.width = frameSize.width;
+            canvasRef.current.height = frameSize.height;
+            outputCanvasRef.current.width = frameSize.width;
+            outputCanvasRef.current.height = frameSize.height;
 
-            videoRef.current.srcObject = null;
-        }
-    }, [stream, setIsReady, requestReady])
+            const stream = outputCanvasRef.current.captureStream();
+            setOutputStream(stream);
 
-
-    function getFrame(): OrbFrame | null{
-        if (isReady && stream && slamRef.current && contextRef.current && canvasRef.current){
-            const frame_start = performance.now();
-            const vid = videoRef.current;
-            const native_width = vid.videoWidth;
-            const native_height = vid.videoHeight;
-            if (native_width === 0 || native_height === 0) return null;
-           
-            /* let width = native_width;
-            let height = native_height; */
-            let width = imageConstraints.width;
-            let height =  imageConstraints.height;
-            
-            if (imageConstraints.preserveRatio){
-                let max_ratio = width / native_width;
-                if (max_ratio*native_height > imageConstraints.height){
-                    max_ratio = height / native_height;
-                }
-                width = max_ratio * native_width;
-                height = max_ratio * native_height;
+            return () => {
+                stream.getTracks().forEach(track => track.stop())
+                setOutputStream(null);
             }
-          
-            const canv = canvasRef.current;
-            canv.width = width;
-            canv.height = height;
-            const ctx = contextRef.current;
-            ctx.drawImage(vid, 0, 0, width, height);
-            const pixels = ctx.getImageData(0, 0, width, height);
-            const without_alpha = pixels.data.filter((value, index) => {return (((index+1) % 4) !== 0)});
-            const wasm_start = performance.now();
-            const res = slamRef.current.processFrameAndDrawFeatures(without_alpha, pixels.width, pixels.height, 3);
-            const wasm_end = performance.now();
-            const data = addAlphaChannelToRGB(res.data, 255);
-            const frame_ready = performance.now();
-            return {
-                img_data: new ImageData(data, width, height),
-                wasm_time_ms: wasm_end-wasm_start,
-                total_time_ms: frame_ready-frame_start,
-                features: res.numFeaturesFound,
-            }
-            
-        } else {
-            return null;
         }
-    }  
+    }, [video, settings])
     
-    return {setStream, setImageConstraints, getFrame, isReady}
+
+    useEffect(() => {
+        if (outputStream && video){
+            callbackIdRef.current = requestAnimationOrVideoFrame(handleFrameLoop, video);
+            
+            return () => {
+                cancelAnimationOrVideoFrame(callbackIdRef.current, video);
+                orbStatsRef.current = {frame_interval: Infinity, features: 0, wasm_time_ms: 0, total_time_ms: 0};
+            }
+        }
+    }, [outputStream, video, handleFrameLoop])
+
+    return {orbStream: outputStream, orbStatsRef} //, settings, 
+}
+
+function determineFrameSize(w: number, h: number, constraint_w: number | undefined, constraint_h: number | undefined): ConstrainedPixelResolution {
+    if (!constraint_w && !constraint_h) return {width: w, height: h};
+    if (constraint_w && constraint_h) return {width: constraint_w, height: constraint_h};
+    if (!constraint_w && constraint_h) return {width: w*constraint_h/h, height: constraint_h};
+    if (constraint_w && !constraint_h) return {width: constraint_w, height: h*constraint_w/w};
+    throw new Error("Error: Execution should not reach here.");
+}
+
+function requestAnimationOrVideoFrame(cb: () => void, vid: HTMLVideoElement): number{
+    if (vid.requestVideoFrameCallback){
+        return vid.requestVideoFrameCallback(cb);
+    } else {
+        return window.requestAnimationFrame(cb);   
+    }
+}
+
+function cancelAnimationOrVideoFrame(id: number, vid: HTMLVideoElement) {
+    if (vid.requestVideoFrameCallback as any){
+        return vid.cancelVideoFrameCallback(id);
+    } else {
+        return window.cancelAnimationFrame(id);
+    }
 }

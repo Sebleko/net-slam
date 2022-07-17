@@ -1,17 +1,16 @@
-import { useState } from 'react';
-import InfoPopup from './components/InfoPopup'
 import ScanningPage from './pages/ScanninPage';
 import ErrorPopupProvider from './components/ErrorPopup'
+import FullscreenPopupProvider from './components/FullscreenPopup/FullscreenPopup';
 
 function App() {
-  const [showInfo, setShowInfo] = useState(false);
 
   return (
-    <div className="App">
-      {showInfo && <InfoPopup setShowInfo={setShowInfo}/>}
-      <ErrorPopupProvider>
-        <ScanningPage setShowInfo={setShowInfo}/>
-      </ErrorPopupProvider>
+    <div className="App">   
+      <FullscreenPopupProvider>
+        <ErrorPopupProvider>
+          <ScanningPage />
+        </ErrorPopupProvider>
+      </FullscreenPopupProvider>
 
     </div>
   );
